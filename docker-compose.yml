@@ -1,0 +1,53 @@
+version: "3.5"
+# All parameters used are in .env file
+services:
+  a-lumen-blog-backend:
+    image: fattureincloud/php:7.4dev
+    container_name: a-lumen-blog-backend
+    environment:
+      - APACHE_RUN_USER=#${UID}
+      - APACHE_RUN_GROUP=#${UID}
+      - XDEBUG_CONFIG=profiler_enable=${XDEBUG_PROFILER_ENABLED}
+      - XDEBUG_ENABLE=${XDEBUG_ENABLE}
+    volumes:
+      # With ":cached" the sync daemon will use cache to optimize I/O operations
+      # This sync the project folder with PHP image main folder
+      - .:/var/www/html
+      # XDebug profiler output dir
+      - ./private/profiler:/var/www/profiler
+      # Persistent storage, without binding to host
+      - /var/www/html/storage
+    command: sh ./docker-init.sh
+    ports:
+      - ${PHP_HOST_PORT}:80
+    networks:
+      backend:
+        aliases:
+          - a-lumen-blog-backend
+
+  a-lumen-blog-db:
+    image: mysql:5.7
+    # !IMPORTANT!: This must be the same as DB_HOST variable in .env file
+    container_name: a-lumen-blog-db
+    volumes:
+      # Persistent DB data
+      - a-lumen-blog-db-data:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=${DB_DATABASE}
+      - MYSQL_USER=${DB_USERNAME}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+    ports:
+      - ${MYSQL_HOST_PORT}:3306
+    networks:
+      backend:
+        aliases:
+          - a-lumen-blog-db
+
+volumes:
+  a-lumen-blog-db-data:
+    driver: local
+
+networks:
+  backend:
+    name: a-lumen-blog-network

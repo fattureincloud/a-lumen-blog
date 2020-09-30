@@ -1,0 +1,11 @@
+/vendor
+.vscode/*
+!.vscode/launch.json
+!.vscode/settings.json
+.idea/
+Homestead.json
+Homestead.yaml
+.env
+.phpunit.result.cache
+/storage
+/private
