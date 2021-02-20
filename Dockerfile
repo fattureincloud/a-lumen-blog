@@ -20,10 +20,7 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     g++ \
     pkg-config \
-    build-essential \
-    libmemcached-dev \
-    libmemcached-tools \
-    memcached
+    build-essential
 
 # 2. apache configs + document root
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
@@ -52,22 +49,8 @@ RUN docker-php-ext-install \
 # 5. composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# 6. configuring xdebug
-RUN yes | pecl install xdebug \
-    && echo "zend_extension=$(find /usr/local/lib/php/extensions/ -name xdebug.so)" > /usr/local/etc/php/conf.d/xdebug.ini \
-    && echo "xdebug.remote_autostart=1" >> /usr/local/etc/php/conf.d/xdebug.ini \
-    && echo "xdebug.remote_enable=1" >> /usr/local/etc/php/conf.d/xdebug.ini \
-    && echo "xdebug.remote_host=host.docker.internal" >> /usr/local/etc/php/conf.d/xdebug.ini \
-    && echo "xdebug.remote_port=9000" >> /usr/local/etc/php/conf.d/xdebug.ini \
-    && echo "xdebug.remote_handler=dbgp" >> /usr/local/etc/php/conf.d/xdebug.ini \
-    && echo "xdebug.profiler_enable_trigger=1" >> /usr/local/etc/php/conf.d/xdebug.ini \
-    && echo "xdebug.profiler_output_dir=\"/var/www/profiler\"" >> /usr/local/etc/php/conf.d/xdebug.ini
-
-# 7. memcached
-RUN git clone https://github.com/php-memcached-dev/php-memcached.git
-RUN cd php-memcached && git checkout tags/v3.1.5 && phpize && ./configure --disable-memcached-sasl && make && make install
-RUN echo 'extension = memcached.so' > /usr/local/etc/php/conf.d/memcached.ini
-
-# 8. mongodb php extension
-RUN pecl install mongodb \
-    &&  echo "extension=mongodb.so" > /usr/local/etc/php/conf.d/mongo.ini
+# 6. xdebug
+RUN pecl install xdebug \
+    && docker-php-ext-enable xdebug
+RUN echo "xdebug.start_with_request=yes" >> $PHP_INI_DIR/conf.d/docker-php-ext-xdebug.ini
+RUN echo "xdebug.discover_client_host=1" >> $PHP_INI_DIR/conf.d/docker-php-ext-xdebug.ini

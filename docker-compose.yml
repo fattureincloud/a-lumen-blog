@@ -2,22 +2,18 @@ version: "3.5"
 # All parameters used are in .env file
 services:
   a-lumen-blog-backend:
-    image: fattureincloud/php:7.4dev
+    image: fattureincloud/php:7.4-playground
     container_name: a-lumen-blog-backend
     environment:
-      - APACHE_RUN_USER=#${UID}
-      - APACHE_RUN_GROUP=#${UID}
-      - XDEBUG_CONFIG=profiler_enable=${XDEBUG_PROFILER_ENABLED}
-      - XDEBUG_ENABLE=${XDEBUG_ENABLE}
+      - XDEBUG_MODE=${XDEBUG_MODE}
     volumes:
       # With ":cached" the sync daemon will use cache to optimize I/O operations
       # This sync the project folder with PHP image main folder
-      - .:/var/www/html
-      # XDebug profiler output dir
-      - ./private/profiler:/var/www/profiler
+      - .:/var/www/html:cached
+      # container /tmp folder, used for profiler and other stuff
+      - ./private/tmp:/tmp
       # Persistent storage, without binding to host
       - /var/www/html/storage
-    command: sh ./docker-init.sh
     ports:
       - ${PHP_HOST_PORT}:80
     networks:
