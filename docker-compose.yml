@@ -20,7 +20,7 @@ services:
           - a-lumen-blog-backend
 
   a-lumen-blog-db:
-    image: mysql:5.7
+    image: mysql:8
     # !IMPORTANT!: This must be the same as DB_HOST variable in .env file
     container_name: a-lumen-blog-db
     volumes:
