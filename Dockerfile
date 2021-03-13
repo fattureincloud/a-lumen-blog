@@ -1,55 +1,33 @@
 FROM php:7.4-apache
 
-# 1. development packages
-RUN apt-get update && apt-get install -y \
-    git \
-    zip \
-    curl \
-    sudo \
-    nano \
-    unzip \
-    libicu-dev \
-    libbz2-dev \
-    libpng-dev \
-    libjpeg-dev \
-    libmcrypt-dev \
-    libonig-dev \
-    libreadline-dev \
-    libfreetype6-dev \
-    libxml2-dev \
-    libzip-dev \
-    g++ \
-    pkg-config \
-    build-essential
+# Install PHP and composer dependencies
+RUN apt-get update
+RUN apt-get install -y git curl libmcrypt-dev libjpeg-dev libpng-dev libonig-dev libfreetype6-dev libbz2-dev libzip-dev zip unzip
 
-# 2. apache configs + document root
-ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
-RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+ENV APP_HOME /var/www/html
 
-# 3. mod_rewrite for URL rewrite and mod_headers for .htaccess extra headers like Access-Control-Allow-Origin-
+# Fix permissions
+RUN chmod 1777 /tmp
+
+# Change uid and gid of apache to docker user uid/gid
+RUN usermod -u 1000 www-data && groupmod -g 1000 www-data
+
+# mod_rewrite for URL rewrite and mod_headers for .htaccess extra headers like Access-Control-Allow-Origin-
 RUN a2enmod rewrite headers
 
-# 4. start with base php config, then add extensions
+# Start with base php config, then add extensions
 RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
 
 RUN docker-php-ext-install \
-    gd \
-    bz2 \
-    intl \
-    iconv \
-    bcmath \
     opcache \
-    calendar \
-    mbstring \
     pdo_mysql \
-    soap \
+    mysqli \
     zip
 
-# 5. composer
+# Install composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# 6. xdebug
+# Xdebug
 RUN pecl install xdebug \
     && docker-php-ext-enable xdebug
 RUN echo "xdebug.start_with_request=yes" >> $PHP_INI_DIR/conf.d/docker-php-ext-xdebug.ini

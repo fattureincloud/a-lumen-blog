@@ -6,14 +6,12 @@ services:
     container_name: a-lumen-blog-backend
     environment:
       - XDEBUG_MODE=${XDEBUG_MODE}
+    user: "www-data:www-data"
     volumes:
-      # With ":cached" the sync daemon will use cache to optimize I/O operations
-      # This sync the project folder with PHP image main folder
+      # Code
       - .:/var/www/html:cached
       # container /tmp folder, used for profiler and other stuff
-      - ./private/tmp:/tmp
-      # Persistent storage, without binding to host
-      - /var/www/html/storage
+      - ./private/tmp:/tmp:cached
     ports:
       - ${PHP_HOST_PORT}:80
     networks:
